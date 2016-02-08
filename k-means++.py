@@ -6,23 +6,35 @@ Dong Wang
 CSE40437 - Social Sensing
 3 February 2016
 
+Computes intial seeds given datafile for k-means clustering algorithm, k-means++
+Reference: https://en.wikipedia.org/wiki/K-means%2B%2B
 Cluster tweets by utilizing the Jaccard Distance metric and K-means clustering algorithm
 
-Usage: python k-means.py [json file] [seeds file]
+Usage: k-means++.py [json file]
 '''
 
 import sys
 import json
 import re, string
+import random
+import bisect
+from numpy import cumsum, random
+
 
 regex = re.compile('[%s]' % re.escape(string.punctuation))
 
+def accumu(l):
+    total = 0
+    for x in l:
+        total += x
+        yield total
+
 class kMeans():
-    def __init__(self, seeds, tweets):
-        self.seeds = seeds
-        self.tweets = tweets
+    def __init__(self, tweets, k):
         self.max_iterations = 1000
-        self.k = len(seeds)
+        self.tweets = tweets
+        self.k = k
+        self.seeds = self.initializeSeeds()
 
         self.clusters = {} # cluster to tweetID
         self.rev_clusters = {} # reverse index, tweetID to cluster
@@ -55,6 +67,43 @@ class kMeans():
                 distance = self.jaccardDistance(bag1, bag2)
                 self.jaccardMatrix[ID1][ID2] = distance
                 self.jaccardMatrix[ID2][ID1] = distance
+
+    def initializeSeeds(self):
+        # Computes initial seeds for k-means using k-means++ algorithm
+
+        # 1. Choose one center uniformly at random from among the data points
+        seed = random.choice(self.tweets.keys())        
+
+        # 2. For each data point x, compute D(x),
+        # the distance between x and the nearest center that has already been chosen
+        seeds = set([seed])
+        while len(seeds) < self.k:
+            distanceMatrix = {}
+            sum_sqr_dist = 0
+            for seed in seeds:
+                bag1 = self.bagOfWords(self.tweets[seed]['text'])
+                for ID in self.tweets:
+                    if ID == seed:
+                        continue
+                    bag2 = self.bagOfWords(self.tweets[ID]['text'])
+                    dist = self.jaccardDistance(bag1, bag2)
+                    if ID not in distanceMatrix or dist < distanceMatrix[ID]:
+                        distanceMatrix[ID] = dist
+            prob_dict = {}
+            for ID in distanceMatrix:
+                sum_sqr_dist += distanceMatrix[ID] * distanceMatrix[ID]
+            for ID in distanceMatrix:
+                prob_dict[ID] = distanceMatrix[ID] * distanceMatrix[ID] / sum_sqr_dist
+
+            # 3. Choose one new data point at random as a new center,
+            # using a weighted probability distribution
+            # where a point x is chosen with probability proportional to D(x)^2.
+            IDs, weights = prob_dict.keys(), prob_dict.values()
+            seed = random.choice(IDs, p=weights)
+            seeds.add(seed)
+        
+        # 4. Repeat Steps 2 and 3 until k centers have been chosen.
+        return list(seeds)
 
     def initializeClusters(self):
         # Initialize tweets to no cluster
@@ -112,7 +161,7 @@ class kMeans():
                 old_rev_cluster = self.rev_clusters
                 self.clusters = new_clusters
                 self.rev_clusters = new_rev_cluster
-        #print iterations
+        print iterations
     
     def printClusterText(self):
         # Prints text of clusters
@@ -134,7 +183,7 @@ class kMeans():
 
 def main():
     if len(sys.argv) != 3:
-        print >> sys.stderr, 'Usage: %s [json file] [seeds file]' % (sys.argv[0])
+        print >> sys.stderr, 'Usage: %s [json file] [k clusters]' % (sys.argv[0])
         exit(-1)
     
     tweets = {}
@@ -142,14 +191,12 @@ def main():
         for line in f:
             tweet = json.loads(line)
             tweets[tweet['id']] = tweet
-    
-    f = open(sys.argv[2])
-    seeds = [int(line.rstrip(',\n')) for line in f.readlines()]
-    f.close()
 
-    kmeans = kMeans(seeds, tweets)
+    k = int(sys.argv[2])
+
+    kmeans = kMeans(tweets, k)
     kmeans.converge()
-    #kmeans.printClusterText()
+    kmeans.printClusterText()
     kmeans.printClusters()
     
 
