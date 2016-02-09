@@ -1,6 +1,9 @@
 Kim Ngo
+
 Dong Wang
+
 CSE40437 - Social Sensing
+
 3 February 2016
 
 ## Files
@@ -10,7 +13,6 @@ k-means++.py: without an initial list of seeds, the program computes an initial 
 
 ## Usage
 `python k-means.py Tweets.json InitialSeeds.txt`
-
 `python k-means++.py Tweets.json 25`
 
 ## K-Means Algorithm
