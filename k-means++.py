@@ -19,9 +19,12 @@ import re, string
 import random
 import bisect
 from numpy import cumsum, random
+import copy
+from nltk.corpus import stopwords
 
 
 regex = re.compile('[%s]' % re.escape(string.punctuation))
+cachedStopWords = stopwords.words('english')
 
 def accumu(l):
     total = 0
@@ -53,17 +56,27 @@ class kMeans():
     def bagOfWords(self, string):
         # Returns a bag of words from a given string
         # Space delimited, removes punctuation, lowercase
-        return set(regex.sub('',string.lower().strip()).split(' '))
+        # Cleans text from url, stop words, tweet @, and 'rt'
+        words = string.lower().strip().split(' ')
+        for word in words:
+            word = word.rstrip().lstrip()
+            if not re.match(r'^https?:\/\/.*[\r\n]*', word) \
+            and not re.match('^@.*', word) \
+            and not re.match('\s', word) \
+            and word not in cachedStopWords \
+            and word != 'rt' \
+            and word != '':
+                yield regex.sub('', word)
 
     def initializeMatrix(self):
         # Dynamic Programming: creates matrix storing pairwise jaccard distances
         for ID1 in self.tweets:
             self.jaccardMatrix[ID1] = {}
-            bag1 = self.bagOfWords(self.tweets[ID1]['text'])
+            bag1 = set(self.bagOfWords(self.tweets[ID1]['text']))
             for ID2 in self.tweets:
                 if ID2 not in self.jaccardMatrix:
                     self.jaccardMatrix[ID2] = {}
-                bag2 = self.bagOfWords(self.tweets[ID2]['text'])
+                bag2 = set(self.bagOfWords(self.tweets[ID2]['text']))
                 distance = self.jaccardDistance(bag1, bag2)
                 self.jaccardMatrix[ID1][ID2] = distance
                 self.jaccardMatrix[ID2][ID1] = distance
@@ -81,11 +94,11 @@ class kMeans():
             distanceMatrix = {}
             sum_sqr_dist = 0
             for seed in seeds:
-                bag1 = self.bagOfWords(self.tweets[seed]['text'])
+                bag1 = set(self.bagOfWords(self.tweets[seed]['text']))
                 for ID in self.tweets:
                     if ID == seed:
                         continue
-                    bag2 = self.bagOfWords(self.tweets[ID]['text'])
+                    bag2 = set(self.bagOfWords(self.tweets[ID]['text']))
                     dist = self.jaccardDistance(bag1, bag2)
                     if ID not in distanceMatrix or dist < distanceMatrix[ID]:
                         distanceMatrix[ID] = dist
@@ -123,7 +136,7 @@ class kMeans():
             new_clusters[k] = set()
 
         for ID in self.tweets:
-            min_dist = 1
+            min_dist = float("inf")
             min_cluster = self.rev_clusters[ID]
 
             # Calculate min average distance to each cluster
@@ -131,9 +144,8 @@ class kMeans():
                 dist = 0
                 count = 0
                 for ID2 in self.clusters[k]:
-                    if ID != ID2:
-                        dist += self.jaccardMatrix[ID][ID2]
-                        count += 1
+                    dist += self.jaccardMatrix[ID][ID2]
+                    count += 1
                 if count > 0:
                     avg_dist = dist/float(count)
                     if min_dist > avg_dist:
@@ -145,23 +157,21 @@ class kMeans():
 
     def converge(self):
         # Initialize previous cluster to compare changes with new clustering
-        old_clusters, old_rev_cluster = self.calcNewClusters()
-        self.clusters = old_clusters
-        self.rev_clusters = old_rev_cluster
+        new_clusters, new_rev_clusters = self.calcNewClusters()
+        self.clusters = copy.deepcopy(new_clusters)
+        self.rev_clusters = copy.deepcopy(new_rev_clusters)
 
         # Converges until old and new iterations are the same
         iterations = 1
         while iterations < self.max_iterations:
-            new_clusters, new_rev_cluster = self.calcNewClusters()
+            new_clusters, new_rev_clusters = self.calcNewClusters()
             iterations += 1
-            if old_rev_cluster == new_rev_cluster:
-                break
+            if self.rev_clusters != new_rev_clusters:
+                self.clusters = copy.deepcopy(new_clusters)
+                self.rev_clusters = copy.deepcopy(new_rev_clusters)
             else:
-                old_clusters = self.clusters
-                old_rev_cluster = self.rev_clusters
-                self.clusters = new_clusters
-                self.rev_clusters = new_rev_cluster
-        #print iterations
+                #print iterations
+                return
     
     def printClusterText(self):
         # Prints text of clusters
@@ -181,6 +191,10 @@ class kMeans():
             for ID2 in self.tweets:
                 print ID, ID2, self.jaccardMatrix[ID][ID2]
 
+    def printSeeds(self):
+        for seed in self.seeds:
+            print seed
+
 def main():
     if len(sys.argv) != 3:
         print >> sys.stderr, 'Usage: %s [json file] [k clusters]' % (sys.argv[0])
@@ -197,6 +211,7 @@ def main():
     kmeans = kMeans(tweets, k)
     kmeans.converge()
     #kmeans.printClusterText()
+    #kmeans.printSeeds()
     kmeans.printClusters()
     
 
