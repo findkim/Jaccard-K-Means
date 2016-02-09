@@ -10,7 +10,7 @@ Computes intial seeds given datafile for k-means clustering algorithm, k-means++
 Reference: https://en.wikipedia.org/wiki/K-means%2B%2B
 Cluster tweets by utilizing the Jaccard Distance metric and K-means clustering algorithm
 
-Usage: k-means++.py [json file]
+Usage: k-means++.py [json file] [k clusters]
 '''
 
 import sys
@@ -161,7 +161,7 @@ class kMeans():
                 old_rev_cluster = self.rev_clusters
                 self.clusters = new_clusters
                 self.rev_clusters = new_rev_cluster
-        print iterations
+        #print iterations
     
     def printClusterText(self):
         # Prints text of clusters
@@ -196,7 +196,7 @@ def main():
 
     kmeans = kMeans(tweets, k)
     kmeans.converge()
-    kmeans.printClusterText()
+    #kmeans.printClusterText()
     kmeans.printClusters()
     
 
