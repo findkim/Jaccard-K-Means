@@ -58,16 +58,15 @@ class kMeans():
         # Space delimited, removes punctuation, lowercase
         # Cleans text from url, stop words, tweet @, and 'rt'
         words = string.lower().strip().split(' ')
-        return words
-        # for word in words:
-        #     word = word.rstrip().lstrip()
-        #     if not re.match(r'^https?:\/\/.*[\r\n]*', word) \
-        #     and not re.match('^@.*', word) \
-        #     and not re.match('\s', word) \
-        #     and word not in cachedStopWords \
-        #     and word != 'rt' \
-        #     and word != '':
-        #         yield regex.sub('', word)
+        for word in words:
+            word = word.rstrip().lstrip()
+            if not re.match(r'^https?:\/\/.*[\r\n]*', word) \
+            and not re.match('^@.*', word) \
+            and not re.match('\s', word) \
+            and word not in cachedStopWords \
+            and word != 'rt' \
+            and word != '':
+                yield regex.sub('', word)
 
     def initializeMatrix(self):
         # Dynamic Programming: creates matrix storing pairwise jaccard distances
