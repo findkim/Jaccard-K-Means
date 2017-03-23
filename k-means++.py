@@ -58,15 +58,16 @@ class kMeans():
         # Space delimited, removes punctuation, lowercase
         # Cleans text from url, stop words, tweet @, and 'rt'
         words = string.lower().strip().split(' ')
-        for word in words:
-            word = word.rstrip().lstrip()
-            if not re.match(r'^https?:\/\/.*[\r\n]*', word) \
-            and not re.match('^@.*', word) \
-            and not re.match('\s', word) \
-            and word not in cachedStopWords \
-            and word != 'rt' \
-            and word != '':
-                yield regex.sub('', word)
+        return words
+        # for word in words:
+        #     word = word.rstrip().lstrip()
+        #     if not re.match(r'^https?:\/\/.*[\r\n]*', word) \
+        #     and not re.match('^@.*', word) \
+        #     and not re.match('\s', word) \
+        #     and word not in cachedStopWords \
+        #     and word != 'rt' \
+        #     and word != '':
+        #         yield regex.sub('', word)
 
     def initializeMatrix(self):
         # Dynamic Programming: creates matrix storing pairwise jaccard distances
@@ -85,7 +86,7 @@ class kMeans():
         # Computes initial seeds for k-means using k-means++ algorithm
 
         # 1. Choose one center uniformly at random from among the data points
-        seed = random.choice(self.tweets.keys())        
+        seed = random.choice(self.tweets.keys())
 
         # 2. For each data point x, compute D(x),
         # the distance between x and the nearest center that has already been chosen
@@ -114,7 +115,7 @@ class kMeans():
             IDs, weights = prob_dict.keys(), prob_dict.values()
             seed = random.choice(IDs, p=weights)
             seeds.add(seed)
-        
+
         # 4. Repeat Steps 2 and 3 until k centers have been chosen.
         return list(seeds)
 
@@ -172,14 +173,14 @@ class kMeans():
             else:
                 #print iterations
                 return
-    
+
     def printClusterText(self):
         # Prints text of clusters
         for k in self.clusters:
             for ID in self.clusters[k]:
                 print self.tweets[ID]['text']
             print '\n'
- 
+
     def printClusters(self):
         # Prints cluster ID and tweet IDs for that cluster
         for k in self.clusters:
@@ -199,7 +200,7 @@ def main():
     if len(sys.argv) != 3:
         print >> sys.stderr, 'Usage: %s [json file] [k clusters]' % (sys.argv[0])
         exit(-1)
-    
+
     tweets = {}
     with open(sys.argv[1], 'r') as f:
         for line in f:
@@ -213,7 +214,7 @@ def main():
     #kmeans.printClusterText()
     #kmeans.printSeeds()
     kmeans.printClusters()
-    
+
 
 if __name__ == '__main__':
     main()
