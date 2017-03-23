@@ -93,7 +93,7 @@ class kMeans():
         # Computes initial seeds for k-means using k-means++ algorithm
 
         # 1. Choose one center uniformly at random from among the data points
-        seed = random.choice(self.tweets.keys())
+        seed = random.choice(list(self.tweets.keys()))
 
         # 2. For each data point x, compute D(x),
         # the distance between x and the nearest center that has already been chosen
@@ -119,7 +119,7 @@ class kMeans():
             # 3. Choose one new data point at random as a new center,
             # using a weighted probability distribution
             # where a point x is chosen with probability proportional to D(x)^2.
-            IDs, weights = prob_dict.keys(), prob_dict.values()
+            IDs, weights = list(prob_dict.keys()), list(prob_dict.values())
             seed = random.choice(IDs, p=weights)
             seeds.add(seed)
 
