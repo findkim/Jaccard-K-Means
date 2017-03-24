@@ -15,6 +15,7 @@ Usage: k-means++.py [json file] [k clusters]
 
 import sys
 import json
+import csv
 import re
 import string
 import random
@@ -193,6 +194,17 @@ class kMeans():
         for k in self.clusters:
             print('{} : {}'.format(str(k), ','.join(map(str, self.clusters[k]))))
 
+    def outputClustersToFile(self):
+        # output clusters to file
+        with open('clusters.csv', 'w') as outfile:
+            csv_out = csv.writer(outfile)
+            cluster_dump = []
+            cluster_dump.append(list(self.clusters.keys()))
+            cluster_dump.append(list(self.clusters.values()))
+
+            for row in cluster_dump:
+                csv_out.writerow(row)
+
     def printMatrix(self):
         # Prints jaccard distance matrix
         for ID in self.tweets:
@@ -222,6 +234,7 @@ def main():
     # kmeans.printClusterText()
     # kmeans.printSeeds()
     kmeans.printClusters()
+    kmeans.outputClustersToFile()
 
 
 if __name__ == '__main__':
