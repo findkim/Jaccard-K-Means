@@ -1,9 +1,10 @@
+updated to make compatible with python3
+
+***
+
 Kim Ngo
-
 Dong Wang
-
 CSE40437 - Social Sensing
-
 3 February 2016
 
 ## Files
@@ -24,7 +25,7 @@ I implemented the k-means++ algorithm proposed by David Arthur and Sergei Vassil
 
 for each t, D(t)^2 / sum(D(t)^2), where D(t) is the distance between t and the nearest seed.
 
-A dictionary is used to record the shortest Jaccard distance between a tweet and the neartest seed. Once all of the nearest distance is computed, I sum the squares of the distances and compute the probability of each tweet by dividing the squared distance by the sum of squares and storing it into another dictionary--key: tweetID, value: probability. 
+A dictionary is used to record the shortest Jaccard distance between a tweet and the neartest seed. Once all of the nearest distance is computed, I sum the squares of the distances and compute the probability of each tweet by dividing the squared distance by the sum of squares and storing it into another dictionary--key: tweetID, value: probability.
 
 With a dictionary of probabilities, I randomly choose with weighted probability the next seed to be added. This is done by splitting the dictionary to a list of keys and list of corresponding values, which are the corresponding probabilities and using `numpy.random.choice` to select at random with weighted probability.
 
