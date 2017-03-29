@@ -194,9 +194,11 @@ class kMeans():
         for k in self.clusters:
             print('{} : {}'.format(str(k), ','.join(map(str, self.clusters[k]))))
 
-    def outputClustersToFile(self):
+    def outputClustersToFile(self, k):
         # output clusters to file
-        with open('clusters.csv', 'w') as outfile:
+        file_name = 'clusters_{}_from_{}.csv'.format(k, len(self.tweets))
+
+        with open('clustered/{}'.format(file_name), 'w') as outfile:
             csv_out = csv.writer(outfile)
             cluster_dump = []
             cluster_dump.append(list(self.clusters.keys()))
@@ -234,7 +236,7 @@ def main():
     # kmeans.printClusterText()
     # kmeans.printSeeds()
     kmeans.printClusters()
-    kmeans.outputClustersToFile()
+    kmeans.outputClustersToFile(k)
 
 
 if __name__ == '__main__':
